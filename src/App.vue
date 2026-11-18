@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 import NavBar from "./components/NavBar.vue";
 import FooterBar from "./components/FooterBar.vue";
 import PageNeighbors from "./components/PageNeighbors.vue";
 import BackToTop from "./components/BackToTop.vue";
+import DocLayout from "./components/DocLayout.vue";
+import { docOrder } from "./data/docs";
+
+const route = useRoute();
+const isDocArticle = computed(() => docOrder.some((entry) => entry.path === route.path));
 </script>
 
 <template>
@@ -12,7 +19,10 @@ import BackToTop from "./components/BackToTop.vue";
     <main id="main-content" class="flex-1" tabindex="-1">
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
-          <component :is="Component" />
+          <DocLayout v-if="isDocArticle" :key="route.path">
+            <component :is="Component" />
+          </DocLayout>
+          <component v-else :is="Component" />
         </transition>
       </router-view>
       <PageNeighbors />

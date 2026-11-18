@@ -1,15 +1,32 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import CodeBlock from "../components/CodeBlock.vue";
+import { useClipboard } from "../composables/useClipboard";
 
-const installTab = ref<"npm" | "curl" | "pnpm" | "bun">("npm");
+type InstallTab = "npm" | "curl" | "pnpm" | "bun";
+const installTabs: InstallTab[] = ["npm", "curl", "pnpm", "bun"];
+const installTab = ref<InstallTab>("npm");
+const tabRefs = ref<HTMLButtonElement[]>([]);
+const { status: copyStatus, message: copyMessage, copy } = useClipboard();
 
-const installCommands = {
+const installCommands: Record<InstallTab, string> = {
   npm: "npm install -g --ignore-scripts @earendil-works/pi-coding-agent",
   curl: "curl -fsSL https://pi.dev/install.sh | sh",
   pnpm: "pnpm add -g --ignore-scripts @earendil-works/pi-coding-agent",
   bun: "bun add -g --ignore-scripts @earendil-works/pi-coding-agent",
 };
+
+function onTabKeydown(event: KeyboardEvent) {
+  const index = installTabs.indexOf(installTab.value);
+  let next = -1;
+  if (event.key === "ArrowRight") next = (index + 1) % installTabs.length;
+  else if (event.key === "ArrowLeft") next = (index - 1 + installTabs.length) % installTabs.length;
+  else if (event.key === "Home") next = 0;
+  else if (event.key === "End") next = installTabs.length - 1;
+  if (next === -1) return;
+  event.preventDefault();
+  installTab.value = installTabs[next];
+  tabRefs.value[next]?.focus();
+}
 
 const features = [
   {
@@ -131,10 +148,26 @@ Run checks with: npm run check`;
           <div class="max-w-2xl mx-auto">
             <div class="glass-card glow-border overflow-hidden">
               <!-- Tabs -->
-              <div class="flex border-b border-surface-700/50">
+              <div
+                class="flex border-b border-surface-700/50"
+                role="tablist"
+                aria-label="选择安装方式"
+                @keydown="onTabKeydown"
+              >
                 <button
-                  v-for="tab in ['npm', 'curl', 'pnpm', 'bun'] as const"
+                  v-for="(tab, tabIndex) in installTabs"
+                  :id="`install-tab-${tab}`"
                   :key="tab"
+                  :ref="
+                    (el) => {
+                      if (el) tabRefs[tabIndex] = el as HTMLButtonElement;
+                    }
+                  "
+                  type="button"
+                  role="tab"
+                  :aria-selected="installTab === tab"
+                  aria-controls="install-command-panel"
+                  :tabindex="installTab === tab ? 0 : -1"
                   class="px-4 py-2.5 text-sm font-medium transition-colors"
                   :class="
                     installTab === tab
@@ -147,24 +180,68 @@ Run checks with: npm run check`;
                 </button>
               </div>
               <!-- Command -->
-              <div class="p-4 flex items-center justify-between gap-4">
-                <code class="text-surface-100 font-mono text-sm sm:text-base">
+              <div
+                id="install-command-panel"
+                role="tabpanel"
+                :aria-labelledby="`install-tab-${installTab}`"
+                class="p-4 flex items-center justify-between gap-4"
+              >
+                <code class="text-surface-100 font-mono text-sm sm:text-base text-left">
                   $ {{ installCommands[installTab] }}
                 </code>
-                <button
-                  class="shrink-0 p-2 text-surface-400 hover:text-brand-400 hover:bg-brand-400/10 rounded-lg transition-colors"
-                  @click="navigator.clipboard.writeText(installCommands[installTab])"
-                  title="复制命令"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
-                  </svg>
-                </button>
+                <span class="relative flex items-center shrink-0">
+                  <button
+                    type="button"
+                    class="min-w-6 min-h-6 p-2 rounded-lg transition-colors"
+                    :class="
+                      copyStatus === 'failed'
+                        ? 'text-red-400 hover:bg-red-400/10'
+                        : 'text-surface-400 hover:text-brand-400 hover:bg-brand-400/10'
+                    "
+                    aria-label="复制安装命令"
+                    @click="copy(installCommands[installTab])"
+                  >
+                    <svg
+                      v-if="copyStatus !== 'copied'"
+                      class="w-5 h-5"
+                      aria-hidden="true"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <svg
+                      v-else
+                      class="w-5 h-5 text-green-400"
+                      aria-hidden="true"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </button>
+                  <span
+                    role="status"
+                    class="pointer-events-none absolute right-full top-1/2 -translate-y-1/2 mr-1 whitespace-nowrap text-xs transition-opacity duration-150"
+                    :class="[
+                      copyStatus === 'failed' ? 'text-red-400' : 'text-green-400',
+                      copyMessage ? 'opacity-100' : 'opacity-0',
+                    ]"
+                    >{{ copyMessage }}</span
+                  >
+                </span>
               </div>
             </div>
           </div>

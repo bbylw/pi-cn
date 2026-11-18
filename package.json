@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vp dev",
-    "build": "vp build",
+    "build": "vp build && node --input-type=module -e \"import{copyFileSync}from'node:fs';copyFileSync('dist/index.html','dist/404.html')\"",
     "preview": "vp preview",
     "check": "vp check"
   },
   "dependencies": {
+    "@oddbird/popover-polyfill": "^0.7.3",
     "vue": "^3.5.45",
     "vue-router": "^5.5.1"
   },

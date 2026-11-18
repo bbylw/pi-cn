@@ -208,13 +208,20 @@ const routes: RouteRecordRaw[] = [
     path: "/development",
     redirect: "/docs",
   },
+  {
+    path: "/:pathMatch(.*)*",
+    name: "NotFound",
+    component: () => import("../pages/NotFoundPage.vue"),
+    meta: { title: "页面不存在 - Pi" },
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-  scrollBehavior(_to, _from, savedPosition) {
+  scrollBehavior(to, _from, savedPosition) {
     if (savedPosition) return savedPosition;
+    if (to.hash) return { el: to.hash, top: 80 };
     return { top: 0 };
   },
 });

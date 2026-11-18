@@ -92,9 +92,13 @@ const footerLinks = [
         <p class="text-surface-500 text-sm">
           © {{ currentYear }} Earendil Inc. & Contributors. MIT License.
         </p>
-        <p class="text-surface-600 text-xs">
+        <p class="text-surface-500 text-xs">
           pi.dev 域名由
-          <a href="https://exe.dev" target="_blank" class="text-brand-500 hover:text-brand-400"
+          <a
+            href="https://exe.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-brand-500 hover:text-brand-400"
             >exe.dev</a
           >
           慷慨捐赠

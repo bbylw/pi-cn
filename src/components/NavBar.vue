@@ -15,19 +15,66 @@ const navItems = [
   { path: '/docs', label: '文档' },
 ]
 
-const docDropdown = [
-  { path: '/how-pi-works', label: 'Pi 如何工作' },
-  { path: '/configuration', label: '配置' },
-  { path: '/security', label: '安全' },
-  { path: '/sessions', label: '会话管理' },
-  { path: '/compaction', label: '上下文压缩' },
-  { path: '/containerization', label: '容器化' },
-  { path: '/extensions', label: '扩展' },
-  { path: '/packages', label: '生态包' },
-  { path: '/settings', label: '设置' },
-  { path: '/cli', label: '命令行' },
-  { path: '/slash-commands', label: '斜杠命令' },
-  { path: '/sdk', label: 'SDK' },
+// 分组结构与上游 earendil-works/pi 文档 docs.json 的导航保持一致，
+// 仅列出本站已翻译的页面，避免出现死链。
+const docGroups = [
+  {
+    title: '入门',
+    items: [
+      { path: '/', label: '概述' },
+      { path: '/quickstart', label: '快速开始' },
+      { path: '/how-pi-works', label: 'Pi 如何工作' },
+    ],
+  },
+  {
+    title: '运行 Pi',
+    items: [
+      { path: '/usage', label: '在终端使用 Pi' },
+      { path: '/models', label: '选择模型' },
+      { path: '/sessions', label: '管理会话与上下文' },
+      { path: '/security', label: '安全运行 Pi' },
+      { path: '/containerization', label: '隔离 Pi' },
+      { path: '/terminal-setup', label: '配置终端' },
+      { path: '/shell-aliases', label: '配置 Shell 命令' },
+      { path: '/tmux', label: '在 tmux 中运行' },
+      { path: '/windows', label: '在 Windows 上运行' },
+      { path: '/termux', label: '在 Android 上运行' },
+    ],
+  },
+  {
+    title: '自定义 Pi',
+    items: [
+      { path: '/configuration', label: '配置 Pi' },
+      { path: '/prompt-templates', label: '提示模板' },
+      { path: '/skills', label: '添加技能' },
+      { path: '/themes', label: '创建主题' },
+      { path: '/packages', label: '使用生态包' },
+      { path: '/mcp', label: '连接 MCP 服务器' },
+    ],
+  },
+  {
+    title: '在 Pi 上构建',
+    items: [
+      { path: '/extensions', label: '构建扩展' },
+      { path: '/custom-provider', label: '添加自定义提供商' },
+      { path: '/tui', label: '构建终端 UI 组件' },
+      { path: '/sdk', label: '使用 SDK' },
+    ],
+  },
+  {
+    title: '参考',
+    items: [
+      { path: '/cli', label: '命令行' },
+      { path: '/slash-commands', label: '斜杠命令' },
+      { path: '/settings', label: '设置' },
+      { path: '/keybindings', label: '键位绑定' },
+      { path: '/providers', label: '模型提供商' },
+      { path: '/session-format', label: '会话文件格式' },
+      { path: '/compaction', label: '压缩与分支摘要' },
+      { path: '/json', label: 'JSON 事件流' },
+      { path: '/rpc', label: 'RPC 协议' },
+    ],
+  },
 ]
 
 const externalLinks = [
@@ -52,7 +99,7 @@ const externalLinks = [
         <!-- Desktop Nav -->
         <nav class="hidden md:flex items-center gap-1">
           <router-link
-            v-for="item in navItems"
+            v-for="item in navItems.filter((navItem) => navItem.path !== '/docs')"
             :key="item.path"
             :to="item.path"
             class="nav-link text-sm"
@@ -60,6 +107,36 @@ const externalLinks = [
           >
             {{ item.label }}
           </router-link>
+
+          <!-- 文档下拉菜单：按上游 docs.json 的分组 -->
+          <div class="relative group">
+            <router-link
+              to="/docs"
+              class="nav-link text-sm flex items-center gap-1"
+              :class="{ 'nav-link-active': route.path === '/docs' || docGroups.some((group) => group.items.some((doc) => doc.path === route.path)) }"
+            >
+              文档
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </router-link>
+            <div class="absolute right-0 top-full pt-3 invisible opacity-0 translate-y-1 transition-all duration-150 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0">
+              <div class="w-[46rem] grid grid-cols-4 gap-x-5 gap-y-6 rounded-xl border border-surface-800 bg-surface-950/95 backdrop-blur-xl p-5 shadow-2xl">
+                <div v-for="group in docGroups" :key="group.title">
+                  <div class="mb-2 text-xs font-medium tracking-wide text-surface-500">{{ group.title }}</div>
+                  <router-link
+                    v-for="doc in group.items"
+                    :key="doc.path"
+                    :to="doc.path"
+                    class="block rounded-md px-2 py-1 text-sm text-surface-300 hover:text-brand-400 hover:bg-surface-900 transition-colors"
+                    :class="{ 'text-brand-400 bg-brand-400/10': route.path === doc.path }"
+                  >
+                    {{ doc.label }}
+                  </router-link>
+                </div>
+              </div>
+            </div>
+          </div>
         </nav>
 
         <!-- External Links -->
@@ -112,7 +189,7 @@ const externalLinks = [
       <div v-if="mobileMenuOpen" class="md:hidden border-t border-surface-800 bg-surface-950/95 backdrop-blur-xl">
         <div class="px-4 py-3 space-y-1">
           <router-link
-            v-for="item in navItems"
+            v-for="item in navItems.filter((navItem) => navItem.path !== '/docs')"
             :key="item.path"
             :to="item.path"
             class="block nav-link"
@@ -122,17 +199,27 @@ const externalLinks = [
             {{ item.label }}
           </router-link>
           <div class="border-t border-surface-800 my-2"></div>
-          <div class="px-2 py-1 text-surface-500 text-xs font-medium">文档</div>
           <router-link
-            v-for="item in docDropdown"
-            :key="item.path"
-            :to="item.path"
-            class="block nav-link pl-4"
-            :class="{ 'nav-link-active': route.path === item.path }"
+            to="/docs"
+            class="block nav-link"
+            :class="{ 'nav-link-active': route.path === '/docs' }"
             @click="mobileMenuOpen = false"
           >
-            {{ item.label }}
+            文档
           </router-link>
+          <template v-for="group in docGroups" :key="group.title">
+            <div class="px-2 pt-2 pb-1 text-surface-500 text-xs font-medium">{{ group.title }}</div>
+            <router-link
+              v-for="doc in group.items"
+              :key="doc.path"
+              :to="doc.path"
+              class="block nav-link pl-4"
+              :class="{ 'nav-link-active': route.path === doc.path }"
+              @click="mobileMenuOpen = false"
+            >
+              {{ doc.label }}
+            </router-link>
+          </template>
         </div>
       </div>
     </transition>

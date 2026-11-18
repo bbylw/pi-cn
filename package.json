@@ -1,15 +1,17 @@
 {
   "name": "pi-site",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
-  "engines": {
-    "node": ">=26"
-  },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview",
+    "check": "vp check"
+  },
+  "dependencies": {
+    "vue": "^3.5.45",
+    "vue-router": "^5.5.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.5",
@@ -19,10 +21,14 @@
     "postcss": "^8.5.33",
     "tailwindcss": "^4.3.5",
     "typescript": "~7.0.2",
-    "vite": "^8.3.8"
+    "vite-plus": "1.7.0"
   },
-  "dependencies": {
-    "vue": "^3.5.45",
-    "vue-router": "^5.5.1"
-  }
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@8.3.8000",
+    "vitest": "5.1.0"
+  },
+  "engines": {
+    "node": ">=26"
+  },
+  "packageManager": "bun@1.4.4"
 }

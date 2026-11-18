@@ -14,23 +14,23 @@
 
 这里是 Pi agent harness 项目的主页，其中包含我们可自我扩展的编码 agent。
 
-* **[@earendil-works/pi-coding-agent](https://github.com/earendil-works/pi/blob/main/packages/coding-agent)**：交互式编码 agent CLI
-* **[@earendil-works/pi-agent-core](https://github.com/earendil-works/pi/blob/main/packages/agent)**：具备工具调用和状态管理的 agent 运行时
-* **[@earendil-works/pi-ai](https://github.com/earendil-works/pi/blob/main/packages/ai)**：统一的多提供商 LLM API（OpenAI、Anthropic、Google 等）
+- **[@earendil-works/pi-coding-agent](https://github.com/earendil-works/pi/blob/main/packages/coding-agent)**：交互式编码 agent CLI
+- **[@earendil-works/pi-agent-core](https://github.com/earendil-works/pi/blob/main/packages/agent)**：具备工具调用和状态管理的 agent 运行时
+- **[@earendil-works/pi-ai](https://github.com/earendil-works/pi/blob/main/packages/ai)**：统一的多提供商 LLM API（OpenAI、Anthropic、Google 等）
 
 想进一步了解 Pi：
 
-* [访问 pi.dev](https://pi.dev)，附带演示的项目官网
-* [阅读文档](https://pi.dev/docs/latest)，你也可以让 agent 自行解释
+- [访问 pi.dev](https://pi.dev)，附带演示的项目官网
+- [阅读文档](https://pi.dev/docs/latest)，你也可以让 agent 自行解释
 
 ## 所有软件包
 
-| 软件包 | 说明 |
-|---------|-------------|
-| **[@earendil-works/pi-ai](https://github.com/earendil-works/pi/blob/main/packages/ai)** | 统一的多提供商 LLM API（OpenAI、Anthropic、Google 等） |
-| **[@earendil-works/pi-agent-core](https://github.com/earendil-works/pi/blob/main/packages/agent)** | 具备工具调用和状态管理的 agent 运行时 |
-| **[@earendil-works/pi-coding-agent](https://github.com/earendil-works/pi/blob/main/packages/coding-agent)** | 交互式编码 agent CLI |
-| **[@earendil-works/pi-tui](https://github.com/earendil-works/pi/blob/main/packages/tui)** | 采用差分渲染的终端 UI 库 |
+| 软件包                                                                                                      | 说明                                                   |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **[@earendil-works/pi-ai](https://github.com/earendil-works/pi/blob/main/packages/ai)**                     | 统一的多提供商 LLM API（OpenAI、Anthropic、Google 等） |
+| **[@earendil-works/pi-agent-core](https://github.com/earendil-works/pi/blob/main/packages/agent)**          | 具备工具调用和状态管理的 agent 运行时                  |
+| **[@earendil-works/pi-coding-agent](https://github.com/earendil-works/pi/blob/main/packages/coding-agent)** | 交互式编码 agent CLI                                   |
+| **[@earendil-works/pi-tui](https://github.com/earendil-works/pi/blob/main/packages/tui)**                   | 采用差分渲染的终端 UI 库                               |
 
 关于 Slack/聊天自动化和工作流，参见 [earendil-works/pi-chat](https://github.com/earendil-works/pi-chat)。
 

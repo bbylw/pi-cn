@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import NavBar from './components/NavBar.vue'
-import FooterBar from './components/FooterBar.vue'
+import NavBar from "./components/NavBar.vue";
+import FooterBar from "./components/FooterBar.vue";
 </script>
 
 <template>
@@ -20,7 +20,9 @@ import FooterBar from './components/FooterBar.vue'
 <style scoped>
 .page-enter-active,
 .page-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 .page-enter-from {
   opacity: 0;

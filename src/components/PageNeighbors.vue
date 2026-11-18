@@ -13,15 +13,17 @@ const neighbors = computed(() => getDocNeighbors(route.path));
     class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12"
     aria-label="上一页 / 下一页"
   >
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-2 gap-3 sm:gap-4">
       <router-link
         v-if="neighbors.prev"
         :to="neighbors.prev.path"
-        class="glass-card group p-4 hover:border-brand-500/30 transition-colors"
+        class="glass-card group p-3 sm:p-4 min-w-0 hover:border-brand-500/30 active:border-brand-500/40 transition-colors"
         rel="prev"
       >
         <span class="block text-xs text-surface-500 mb-1">← 上一页</span>
-        <span class="block text-sm font-medium text-surface-200 group-hover:text-brand-400">
+        <span
+          class="block text-sm font-medium text-surface-200 group-hover:text-brand-400 truncate"
+        >
           {{ neighbors.prev.label }}
         </span>
       </router-link>
@@ -29,11 +31,13 @@ const neighbors = computed(() => getDocNeighbors(route.path));
       <router-link
         v-if="neighbors.next"
         :to="neighbors.next.path"
-        class="glass-card group p-4 text-right hover:border-brand-500/30 transition-colors sm:col-start-2"
+        class="glass-card group p-3 sm:p-4 min-w-0 text-right col-start-2 hover:border-brand-500/30 active:border-brand-500/40 transition-colors"
         rel="next"
       >
         <span class="block text-xs text-surface-500 mb-1">下一页 →</span>
-        <span class="block text-sm font-medium text-surface-200 group-hover:text-brand-400">
+        <span
+          class="block text-sm font-medium text-surface-200 group-hover:text-brand-400 truncate"
+        >
           {{ neighbors.next.label }}
         </span>
       </router-link>

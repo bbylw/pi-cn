@@ -2,6 +2,7 @@
 import NavBar from "./components/NavBar.vue";
 import FooterBar from "./components/FooterBar.vue";
 import PageNeighbors from "./components/PageNeighbors.vue";
+import BackToTop from "./components/BackToTop.vue";
 </script>
 
 <template>
@@ -17,6 +18,7 @@ import PageNeighbors from "./components/PageNeighbors.vue";
       <PageNeighbors />
     </main>
     <FooterBar />
+    <BackToTop />
   </div>
 </template>
 

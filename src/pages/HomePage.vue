@@ -29,8 +29,13 @@ const features = [
   },
   {
     icon: '🌐',
-    title: '15+ 提供商',
-    description: 'Anthropic、OpenAI、Google、Azure、Bedrock、Mistral、Groq 等。API Key 或 OAuth 认证。'
+    title: '30+ 提供商',
+    description: 'Anthropic、OpenAI、Google、Azure、Bedrock、OpenRouter、Mistral、Groq 等。API Key 或 OAuth 认证。'
+  },
+  {
+    icon: '🔌',
+    title: 'MCP 服务器',
+    description: '通过 stdio 或 streamable HTTP 连接 Model Context Protocol 服务器，把它们的工具和资源提供给模型。'
   },
   {
     icon: '🌳',
@@ -82,7 +87,7 @@ Run checks with: npm run check`
           <!-- Badge -->
           <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 mb-8">
             <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse"></span>
-            <span class="text-brand-300 text-sm font-medium">v2.0 现已发布</span>
+            <span class="text-brand-300 text-sm font-medium">v1.5.2 现已发布</span>
           </div>
 
           <!-- Title -->
@@ -195,7 +200,7 @@ Run checks with: npm run check`
     <section class="py-16 sm:py-24 bg-surface-900/30">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-12">
-          <h2 class="section-title mb-4">15+ 提供商，数百个模型</h2>
+          <h2 class="section-title mb-4">30+ 提供商，数百个模型</h2>
           <p class="section-subtitle mx-auto">
             通过 API Key 或 OAuth 认证。使用 /model 或 Ctrl+L 在会话中切换模型。
           </p>

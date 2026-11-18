@@ -23,18 +23,47 @@ const compactionFlow = `压缩前：
                  not sent to LLM                    sent to LLM`
 
 const settingsCode = `{
-  "reserveTokens": 16384,
-  "keepRecentTokens": 20000,
-  "branchSummaryEnabled": true,
-  "branchSummaryKeepRecentTokens": 10000
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000
+  },
+  "branchSummary": {
+    "reserveTokens": 16384,
+    "skipPrompt": false
+  }
 }`
 
-const customCompactionCode = `// 通过扩展自定义压缩
-pi.on("session_before_compact", async (event, ctx) => {
-  // 实现自定义压缩逻辑
+const perModelCode = `{
+  "compaction": {
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000,
+    "modelOverrides": {
+      "some-provider/big-model": {
+        "reserveTokens": 400000
+      }
+    }
+  }
+}`
+
+const customCompactionCode = `pi.on("session_before_compact", async (event, ctx) => {
+  const { preparation, customInstructions, reason, willRetry } = event;
+  // preparation.messagesToSummarize - 要摘要的消息
+  // preparation.previousSummary - 上一次压缩的摘要
+  // preparation.firstKeptEntryId - 保留消息的起点
+  // reason - "manual"、"threshold" 或 "overflow"
+
+  // 取消压缩：
+  // return { cancel: true };
+
   return {
-    summary: "自定义摘要...",
-    firstKeptEntryId: event.firstKeptEntryId,
+    compaction: {
+      summary: "自定义摘要...",
+      firstKeptEntryId: preparation.firstKeptEntryId,
+      tokensBefore: preparation.tokensBefore,
+      // usage: summaryResponse.usage, // 可选，计入会话总量
+      details: { /* 自定义数据 */ },
+    },
   };
 });`
 </script>
@@ -139,12 +168,71 @@ pi.on("session_before_compact", async (event, ctx) => {
       <section class="mb-12">
         <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">设置</h2>
         <CodeBlock :code="settingsCode" language="json" filename="~/.pi/agent/settings.json" />
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-surface-700">
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">设置</th>
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">默认值</th>
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-surface-800/50">
+                <td class="py-3 px-4"><code class="text-brand-400 text-xs">compaction.enabled</code></td>
+                <td class="py-3 px-4 text-surface-400 text-xs">true</td>
+                <td class="py-3 px-4 text-surface-300">启用自动压缩；设为 false 后仍可用 /compact 手动压缩</td>
+              </tr>
+              <tr class="border-b border-surface-800/50">
+                <td class="py-3 px-4"><code class="text-brand-400 text-xs">compaction.reserveTokens</code></td>
+                <td class="py-3 px-4 text-surface-400 text-xs">16384</td>
+                <td class="py-3 px-4 text-surface-300">低于该空闲上下文 token 数时开始自动压缩</td>
+              </tr>
+              <tr class="border-b border-surface-800/50">
+                <td class="py-3 px-4"><code class="text-brand-400 text-xs">compaction.keepRecentTokens</code></td>
+                <td class="py-3 px-4 text-surface-400 text-xs">20000</td>
+                <td class="py-3 px-4 text-surface-300">保留的近期 token 数，不参与摘要</td>
+              </tr>
+              <tr class="border-b border-surface-800/50">
+                <td class="py-3 px-4"><code class="text-brand-400 text-xs">branchSummary.reserveTokens</code></td>
+                <td class="py-3 px-4 text-surface-400 text-xs">16384</td>
+                <td class="py-3 px-4 text-surface-300">总结分支历史时保留的 token 数</td>
+              </tr>
+              <tr class="border-b border-surface-800/50">
+                <td class="py-3 px-4"><code class="text-brand-400 text-xs">branchSummary.skipPrompt</code></td>
+                <td class="py-3 px-4 text-surface-400 text-xs">false</td>
+                <td class="py-3 px-4 text-surface-300">跳过分支摘要提示并默认不摘要</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 class="text-lg font-semibold text-surface-100 mb-2 mt-6">按模型覆盖</h3>
+        <p class="text-surface-300 text-sm mb-3">
+          用 <code class="text-brand-400">compaction.modelOverrides</code> 为不同模型调整 token 预算。键是精确、区分大小写的
+          <code class="text-brand-400">provider/modelId</code>，每个值独立回退到普通设置再回退到内置默认值：
+        </p>
+        <CodeBlock :code="perModelCode" language="json" />
+        <p class="text-surface-400 text-sm mt-3">
+          对 1M 上下文窗口的模型，上面的覆盖会在超过 600K token 时触发压缩，同时保留普通的 20000 个近期 token。
+          <code class="text-brand-400">enabled</code> 始终是全局设置，不按模型区分。
+        </p>
       </section>
 
       <!-- Custom Compaction -->
       <section class="mb-12">
         <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">通过扩展自定义压缩</h2>
+        <p class="text-surface-300 mb-3">
+          扩展可以拦截并自定义压缩与分支摘要。<code class="text-brand-400">session_before_compact</code> 在自动压缩或
+          <code class="text-brand-400">/compact</code> 之前触发，可以取消或提供自定义摘要；
+          <code class="text-brand-400">session_compact_failed</code> 在压缩失败或被中止时触发；
+          <code class="text-brand-400">session_before_tree</code> 在 <code class="text-brand-400">/tree</code> 导航前触发。
+        </p>
         <CodeBlock :code="customCompactionCode" language="typescript" filename="自定义压缩扩展" />
+        <p class="text-surface-400 text-sm mt-3">
+          想用自己的模型生成摘要时，可用 <code class="text-brand-400">convertToLlm</code> 和
+          <code class="text-brand-400">serializeConversation</code> 把消息转成文本，再把摘要响应中的
+          <code class="text-brand-400">usage</code> 一并返回，使会话总量包含摘要开销。
+        </p>
       </section>
     </div>
   </div>

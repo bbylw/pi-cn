@@ -1,58 +1,19 @@
 <script setup lang="ts">
 import CodeBlock from '../components/CodeBlock.vue'
 
-const cliRef = `# 基本用法
-pi                               # 在当前目录启动
-pi -c                            # 继续最近的会话
-pi -r                            # 浏览之前的会话
-pi -p "query"                    # 非交互模式（一次性）
-pi --name "my task"              # 设置会话名称
-pi --session <path|id>           # 打开特定会话
+const shellCode = `!git status`
 
-# 模式
-pi --mode print                  # 打印模式（默认非交互）
-pi --mode json                   # JSON 事件流模式
-pi --mode rpc                    # RPC 模式（stdin/stdout）
+const steering = [
+  { want: '调整当前任务', action: '输入消息并按 Enter' },
+  { want: '在当前任务之后追加工作', action: '输入消息并按 Alt+Enter' },
+  { want: '把排队消息放回编辑器', action: '按 Alt+Up' },
+  { want: '停止当前任务', action: '按 Escape' },
+]
 
-# 扩展
-pi -e ./extension.ts             # 加载扩展文件
-pi install npm:@foo/pi-tools     # 从 npm 安装包
-pi install git:github.com/user/repo  # 从 git 安装`
+const exportCode = `/export      # 导出为 HTML 或 JSONL
+/share       # 上传会话并获取查看链接`
 
-const slashCommands = `/login              # 登录提供商
-/logout             # 登出
-/model              # 切换模型
-/reload             # 重载扩展和上下文文件
-/new                # 新会话
-/resume             # 恢复会话
-/tree               # 浏览会话树
-/fork               # 从当前点分叉
-/clone              # 克隆会话
-/export             # 导出为 HTML
-/share              # 上传到 GitHub Gist
-/clear              # 清除当前会话上下文`
-
-const contextFiles = `# AGENTS.md - 项目指令（启动时加载）
-# 搜索路径：~/.pi/agent/ → 父目录 → 当前目录
-
-# SYSTEM.md - 替换或追加默认系统提示
-
-# 示例 AGENTS.md：
-# - 代码更改后运行 npm run check
-# - 不要在生产环境运行迁移
-# - 保持回复简洁`
-
-const keybindings = `Enter                # 发送消息（转向）
-Alt+Enter            # 排队后续消息
-Ctrl+C               # 取消当前生成
-Ctrl+D               # 退出
-Ctrl+L               # 选择模型
-Ctrl+P               # 循环切换模型
-Shift+Tab            # 循环思考级别
-Ctrl+K               # 搜索文档
-@                    # 模糊搜索文件
-!command             # 运行 shell 命令
-!!command            # 运行命令（不添加到上下文）`
+const diagnostics = `/debug   # 把渲染行与当前会话消息写入 pi-debug.log`
 </script>
 
 <template>
@@ -60,122 +21,155 @@ Ctrl+K               # 搜索文档
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
       <div class="mb-12">
-        <h1 class="text-4xl font-display font-bold text-surface-50 mb-4">使用指南</h1>
+        <h1 class="text-4xl font-display font-bold text-surface-50 mb-4">在终端中使用 Pi</h1>
         <p class="text-lg text-surface-400 leading-relaxed">
-          了解 Pi 的交互模式、斜杠命令、上下文文件和 CLI 参考。
+          在你想工作的文件夹中运行 <code class="text-brand-400">pi</code>。Pi 用这个文件夹发现文件、指令和配置，并归组保存的会话。
+          如果还没有安装或选择模型，请先阅读 <router-link to="/quickstart" class="text-brand-400 hover:text-brand-300">快速开始</router-link>。
         </p>
       </div>
 
-      <!-- Interactive Mode -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">交互模式</h2>
-        <p class="text-surface-300 mb-4">
-          Pi 的交互模式提供完整的终端 UI 体验。启动后，你可以输入请求、使用斜杠命令、引用文件和运行 shell 命令。
+      <section class="mb-8 glass-card p-5">
+        <p class="text-surface-300 text-sm">
+          转录区显示你的提示、Pi 的响应、工具调用、结果和错误。你在编辑器中编写提示和命令。
+          页脚显示当前文件夹、会话、模型、上下文用量，以及累计用量和成本。
         </p>
-        <div class="glass-card p-6">
-          <h3 class="text-lg font-semibold text-surface-100 mb-3">核心概念</h3>
-          <ul class="space-y-2 text-surface-300">
-            <li class="flex items-start gap-2">
-              <span class="text-brand-400 mt-1">•</span>
-              <span><strong class="text-surface-100">转向（Steer）</strong>：在 Agent 运行时按 Enter 发送新消息，中断当前执行</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-brand-400 mt-1">•</span>
-              <span><strong class="text-surface-100">后续（Follow-up）</strong>：Alt+Enter 排队消息，等待当前执行完成</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-brand-400 mt-1">•</span>
-              <span><strong class="text-surface-100">Shell 命令</strong>：!command 运行命令并将输出发送给模型</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-brand-400 mt-1">•</span>
-              <span><strong class="text-surface-100">文件引用</strong>：@ 触发文件模糊搜索</span>
-            </li>
-          </ul>
-        </div>
       </section>
 
-      <!-- CLI Reference -->
+      <!-- Enter a prompt -->
       <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">CLI 参考</h2>
-        <CodeBlock :code="cliRef" language="bash" filename="命令行选项" />
-      </section>
-
-      <!-- Slash Commands -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">斜杠命令</h2>
-        <CodeBlock :code="slashCommands" language="text" filename="内置命令" />
-      </section>
-
-      <!-- Context Files -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">上下文文件</h2>
-        <p class="text-surface-300 mb-4">
-          Pi 在启动时从多个位置加载上下文文件，让你可以给 Agent 提供项目级和全局指令。
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">输入提示</h2>
+        <p class="text-surface-300 mb-3">
+          输入请求并按 <code class="text-brand-400">Enter</code> 发送。<code class="text-brand-400">Shift+Enter</code> 换行，
+          <code class="text-brand-400">Ctrl+G</code> 在你配置的外部编辑器中编写更长的提示。
         </p>
-        <CodeBlock :code="contextFiles" language="markdown" filename="上下文文件加载顺序" />
-        <div class="mt-4 glass-card p-4">
-          <h4 class="font-semibold text-surface-100 mb-2">加载优先级</h4>
-          <ol class="list-decimal list-inside text-surface-300 text-sm space-y-1">
-            <li><code class="text-brand-400">~/.pi/agent/AGENTS.md</code> — 全局指令</li>
-            <li>父目录中的 <code class="text-brand-400">AGENTS.md</code> 或 <code class="text-brand-400">CLAUDE.md</code></li>
-            <li>当前目录中的 <code class="text-brand-400">AGENTS.md</code> 或 <code class="text-brand-400">CLAUDE.md</code></li>
-          </ol>
-        </div>
-      </section>
-
-      <!-- Keybindings -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">快捷键</h2>
-        <CodeBlock :code="keybindings" language="text" filename="默认快捷键" />
-      </section>
-
-      <!-- Sessions -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">会话管理</h2>
-        <p class="text-surface-300 mb-4">
-          Pi 的会话以树形结构存储。你可以回溯到任意先前的消息，从那里继续，所有分支都存在于单个文件中。
-        </p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="glass-card p-4">
-            <h4 class="font-semibold text-surface-100 mb-2">/tree</h4>
-            <p class="text-surface-400 text-sm">浏览会话树，导航到任意先前的节点</p>
-          </div>
-          <div class="glass-card p-4">
-            <h4 class="font-semibold text-surface-100 mb-2">/fork</h4>
-            <p class="text-surface-400 text-sm">从当前节点创建新分支</p>
-          </div>
-          <div class="glass-card p-4">
-            <h4 class="font-semibold text-surface-100 mb-2">/export</h4>
-            <p class="text-surface-400 text-sm">导出会话为 HTML 文件</p>
-          </div>
-          <div class="glass-card p-4">
-            <h4 class="font-semibold text-surface-100 mb-2">/share</h4>
-            <p class="text-surface-400 text-sm">上传到 GitHub Gist 并获取分享链接</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Compaction -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">上下文压缩</h2>
-        <p class="text-surface-300 mb-4">
-          当接近上下文限制时，Pi 会自动总结旧消息。压缩行为完全可通过扩展自定义：
-        </p>
-        <ul class="space-y-2 text-surface-300">
-          <li class="flex items-start gap-2">
-            <span class="text-brand-400 mt-1">•</span>
-            <span>基于主题的压缩</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-brand-400 mt-1">•</span>
-            <span>代码感知摘要</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <span class="text-brand-400 mt-1">•</span>
-            <span>使用不同的摘要模型</span>
-          </li>
+        <p class="text-surface-300 mb-2">要在提示中加入文件或图片：</p>
+        <ul class="space-y-2 text-surface-300 text-sm">
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span>输入 <code class="text-brand-400">@</code> 搜索文件并加入提示。</span></li>
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span>按 <code class="text-brand-400">Tab</code> 补全路径。</span></li>
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span>在支持的终端中粘贴图片或拖入图片。</span></li>
         </ul>
+      </section>
+
+      <!-- Follow work -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">跟进 Pi 的工作</h2>
+        <p class="text-surface-300 mb-3">
+          Pi 工作时会显示每次工具调用和结果。<code class="text-brand-400">Ctrl+O</code> 展开或折叠工具输出，
+          <code class="text-brand-400">Ctrl+T</code> 显示或隐藏思考块。
+        </p>
+        <p class="text-surface-300 mb-3">
+          启动标题列出 Pi 加载的指令和资源；编辑器边框表示当前思考级别；页脚随模型使用上下文和上报用量而更新。
+        </p>
+        <p class="text-surface-400 text-sm">
+          Pi 不会在每次工具调用前询问。请检查命令和被修改的文件，对不可信或无人值守的工作使用沙箱，参见
+          <router-link to="/security" class="text-brand-400 hover:text-brand-300">安全</router-link>。
+        </p>
+      </section>
+
+      <!-- Change direction -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">改变方向</h2>
+        <p class="text-surface-300 mb-3">Pi 工作时你仍然可以发送输入：</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-surface-700">
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">你的目标</th>
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="s in steering" :key="s.want" class="border-b border-surface-800/50">
+                <td class="py-3 px-4 text-surface-100">{{ s.want }}</td>
+                <td class="py-3 px-4 text-surface-300">{{ s.action }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="text-surface-400 text-sm mt-3">
+          用 Enter 发送的消息会等当前响应及其工具调用完成后进入，用于指导下一次响应；用 Alt+Enter 发送的后续消息会等 Pi
+          完成当前任务。中止会把排队的消息放回编辑器。Windows Terminal 保留了一些 Alt 快捷键，
+          替代方案见终端的平台配置。
+        </p>
+      </section>
+
+      <!-- Change model or settings -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">修改模型或设置</h2>
+        <p class="text-surface-300 mb-3">输入 <code class="text-brand-400">/</code> 搜索可用命令。最常用的命令：</p>
+        <ul class="space-y-2 text-surface-300 text-sm">
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span><code class="text-brand-400">/model</code> 选择模型，<code class="text-brand-400">Ctrl+L</code> 打开同一个选择器。</span></li>
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span><code class="text-brand-400">/thinking</code> 选择当前模型使用的推理量，<code class="text-brand-400">Shift+Tab</code> 循环支持的级别。</span></li>
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span><code class="text-brand-400">/login</code> 和 <code class="text-brand-400">/logout</code> 管理提供商访问。</span></li>
+          <li class="flex items-start gap-2"><span class="text-brand-400 mt-1">•</span><span><code class="text-brand-400">/settings</code> 修改常见偏好。</span></li>
+        </ul>
+        <p class="text-surface-400 text-sm mt-3">
+          提示模板、技能和扩展可以向同一个菜单添加命令。完整清单见
+          <router-link to="/slash-commands" class="text-brand-400 hover:text-brand-300">斜杠命令</router-link>。
+        </p>
+      </section>
+
+      <!-- Continue or start over -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">继续或重新开始</h2>
+        <p class="text-surface-300 mb-3">
+          Pi 会自动保存会话，除非禁用了会话持久化。<code class="text-brand-400">/new</code> 开始新会话，
+          <code class="text-brand-400">/resume</code> 打开其他已保存会话，<code class="text-brand-400">/name</code> 给会话起名，
+          <code class="text-brand-400">/session</code> 显示会话文件、ID、消息数、token 用量和成本。
+        </p>
+        <p class="text-surface-300">
+          想在不丢失现有工作的情况下探索另一种方案时，使用 <code class="text-brand-400">/tree</code>、<code class="text-brand-400">/fork</code>
+          或 <code class="text-brand-400">/clone</code>。用 <code class="text-brand-400">/compact</code> 减少发送给模型的对话历史，
+          详见 <router-link to="/sessions" class="text-brand-400 hover:text-brand-300">会话管理</router-link>。
+          离开 Pi 后，在同一文件夹运行 <code class="text-brand-400">pi --continue</code> 可恢复最近的会话。
+        </p>
+      </section>
+
+      <!-- Run a terminal command -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">运行终端命令</h2>
+        <p class="text-surface-300 mb-3">在命令前加 <code class="text-brand-400">!</code> 运行它，并把输出加入对话：</p>
+        <CodeBlock :code="shellCode" language="text" />
+        <p class="text-surface-400 text-sm mt-2">
+          使用 <code class="text-brand-400">!!</code> 可以在不把输出发给模型的情况下运行命令。
+        </p>
+      </section>
+
+      <!-- Copy, export, share -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">复制、导出或分享结果</h2>
+        <p class="text-surface-300 mb-3">
+          按 <code class="text-brand-400">Ctrl+X</code> 或运行 <code class="text-brand-400">/copy</code> 复制最后一条 assistant 响应。
+        </p>
+        <CodeBlock :code="exportCode" language="text" />
+        <p class="text-surface-400 text-sm mt-3">
+          <code class="text-brand-400">/share</code> 上传会话并返回查看链接。默认情况下，Radius 认证会让产物对你所在的 Radius
+          组织可见；否则 Pi 通过 GitHub CLI 创建私有 gist。<code class="text-brand-400">sessionShareDestination</code> 设置可以强制指定目标。
+          分享前请检查会话，它可能包含提示、工具输出、文件内容以及对话中暴露的凭证。
+        </p>
+      </section>
+
+      <!-- Adjust terminal -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">调整终端</h2>
+        <p class="text-surface-300 mb-3">
+          全屏模式（默认）保持编辑器和状态区固定，转录区在终端窗口内滚动；常规模式使用终端自身的回滚缓冲。
+          通过 <code class="text-brand-400">/settings</code> 或 <code class="text-brand-400">--tui-mode</code> 选择模式。
+        </p>
+        <p class="text-surface-300">
+          终端对鼠标输入、快捷键和内联图片的支持各不相同。运行 <code class="text-brand-400">/hotkeys</code> 查看当前会话生效的快捷键，
+          完整清单见 <router-link to="/slash-commands" class="text-brand-400 hover:text-brand-300">斜杠命令</router-link> 与设置页。
+        </p>
+      </section>
+
+      <!-- Diagnostics -->
+      <section class="mb-12 glass-card p-6">
+        <h2 class="text-xl font-display font-semibold text-surface-50 mb-3">收集诊断信息</h2>
+        <CodeBlock :code="diagnostics" language="text" />
+        <p class="text-surface-400 text-sm mt-2">
+          Pi 把渲染出的终端行和当前会话消息写入 agent 目录中的 <code class="text-brand-400">pi-debug.log</code>。
+          分享前请先检查该文件，它可能包含提示、模型响应、工具输出、文件内容和终端数据。
+        </p>
       </section>
     </div>
   </div>

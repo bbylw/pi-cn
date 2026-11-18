@@ -15,10 +15,22 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '快速开始 - Pi' }
   },
   {
+    path: '/how-pi-works',
+    name: 'HowPiWorks',
+    component: () => import('../pages/HowPiWorksPage.vue'),
+    meta: { title: 'Pi 如何工作 - Pi' }
+  },
+  {
     path: '/usage',
     name: 'Usage',
     component: () => import('../pages/UsagePage.vue'),
     meta: { title: '使用指南 - Pi' }
+  },
+  {
+    path: '/models',
+    name: 'Models',
+    component: () => import('../pages/ModelsPage.vue'),
+    meta: { title: '选择模型 - Pi' }
   },
   {
     path: '/providers',
@@ -30,7 +42,25 @@ const routes: RouteRecordRaw[] = [
     path: '/extensions',
     name: 'Extensions',
     component: () => import('../pages/ExtensionsPage.vue'),
-    meta: { title: '扩展与技能 - Pi' }
+    meta: { title: '扩展 - Pi' }
+  },
+  {
+    path: '/skills',
+    name: 'Skills',
+    component: () => import('../pages/SkillsPage.vue'),
+    meta: { title: '技能 - Pi' }
+  },
+  {
+    path: '/mcp',
+    name: 'Mcp',
+    component: () => import('../pages/McpPage.vue'),
+    meta: { title: 'MCP 服务器 - Pi' }
+  },
+  {
+    path: '/configuration',
+    name: 'Configuration',
+    component: () => import('../pages/ConfigurationPage.vue'),
+    meta: { title: '配置 - Pi' }
   },
   {
     path: '/packages',
@@ -81,62 +111,98 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/SdkPage.vue'),
     meta: { title: 'SDK - Pi' }
   },
-  // Redirects for pages not yet created
   {
-    path: '/keybindings',
-    redirect: '/usage'
+    path: '/cli',
+    name: 'Cli',
+    component: () => import('../pages/CliPage.vue'),
+    meta: { title: '命令行 - Pi' }
   },
   {
-    path: '/session-format',
-    redirect: '/sessions'
+    path: '/slash-commands',
+    name: 'SlashCommands',
+    component: () => import('../pages/SlashCommandsPage.vue'),
+    meta: { title: '斜杠命令 - Pi' }
   },
-  {
-    path: '/prompt-templates',
-    redirect: '/extensions'
-  },
-  {
-    path: '/themes',
-    redirect: '/extensions'
-  },
-  {
-    path: '/models',
-    redirect: '/providers'
-  },
-  {
-    path: '/custom-provider',
-    redirect: '/providers'
-  },
-  {
-    path: '/rpc',
-    redirect: '/sdk'
-  },
-  {
-    path: '/json',
-    redirect: '/sdk'
-  },
-  {
-    path: '/tui',
-    redirect: '/extensions'
-  },
-  {
-    path: '/windows',
-    redirect: '/docs'
-  },
-  {
-    path: '/termux',
-    redirect: '/docs'
-  },
-  {
-    path: '/tmux',
-    redirect: '/docs'
-  },
+  // Terminal and environment guides
   {
     path: '/terminal-setup',
-    redirect: '/docs'
+    name: 'TerminalSetup',
+    component: () => import('../pages/TerminalSetupPage.vue'),
+    meta: { title: '配置终端 - Pi' }
   },
   {
     path: '/shell-aliases',
-    redirect: '/docs'
+    name: 'ShellAliases',
+    component: () => import('../pages/ShellAliasesPage.vue'),
+    meta: { title: '配置 shell 命令 - Pi' }
+  },
+  {
+    path: '/tmux',
+    name: 'Tmux',
+    component: () => import('../pages/TmuxPage.vue'),
+    meta: { title: '在 tmux 中运行 Pi - Pi' }
+  },
+  {
+    path: '/windows',
+    name: 'Windows',
+    component: () => import('../pages/WindowsPage.vue'),
+    meta: { title: '在 Windows 上运行 Pi - Pi' }
+  },
+  {
+    path: '/termux',
+    name: 'Termux',
+    component: () => import('../pages/TermuxPage.vue'),
+    meta: { title: '在 Android 上用 Termux 运行 Pi - Pi' }
+  },
+  // Customization references
+  {
+    path: '/prompt-templates',
+    name: 'PromptTemplates',
+    component: () => import('../pages/PromptTemplatesPage.vue'),
+    meta: { title: '提示模板 - Pi' }
+  },
+  {
+    path: '/themes',
+    name: 'Themes',
+    component: () => import('../pages/ThemesPage.vue'),
+    meta: { title: '主题 - Pi' }
+  },
+  {
+    path: '/custom-provider',
+    name: 'CustomProvider',
+    component: () => import('../pages/CustomProviderPage.vue'),
+    meta: { title: '自定义提供商 - Pi' }
+  },
+  {
+    path: '/tui',
+    name: 'Tui',
+    component: () => import('../pages/TuiPage.vue'),
+    meta: { title: '终端 UI - Pi' }
+  },
+  // Protocol and format references
+  {
+    path: '/keybindings',
+    name: 'Keybindings',
+    component: () => import('../pages/KeybindingsPage.vue'),
+    meta: { title: '键位绑定 - Pi' }
+  },
+  {
+    path: '/session-format',
+    name: 'SessionFormat',
+    component: () => import('../pages/SessionFormatPage.vue'),
+    meta: { title: '会话文件格式 - Pi' }
+  },
+  {
+    path: '/json',
+    name: 'Json',
+    component: () => import('../pages/JsonPage.vue'),
+    meta: { title: 'JSON 事件流 - Pi' }
+  },
+  {
+    path: '/rpc',
+    name: 'Rpc',
+    component: () => import('../pages/RpcPage.vue'),
+    meta: { title: 'RPC 模式 - Pi' }
   },
   {
     path: '/development',

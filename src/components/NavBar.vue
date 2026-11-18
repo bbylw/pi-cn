@@ -9,18 +9,24 @@ const navItems = [
   { path: '/', label: '首页' },
   { path: '/quickstart', label: '快速开始' },
   { path: '/usage', label: '使用指南' },
-  { path: '/providers', label: '模型提供商' },
-  { path: '/extensions', label: '扩展技能' },
-  { path: '/packages', label: '生态包' },
+  { path: '/models', label: '模型' },
+  { path: '/mcp', label: 'MCP' },
+  { path: '/skills', label: '技能' },
   { path: '/docs', label: '文档' },
 ]
 
 const docDropdown = [
+  { path: '/how-pi-works', label: 'Pi 如何工作' },
+  { path: '/configuration', label: '配置' },
   { path: '/security', label: '安全' },
   { path: '/sessions', label: '会话管理' },
   { path: '/compaction', label: '上下文压缩' },
   { path: '/containerization', label: '容器化' },
+  { path: '/extensions', label: '扩展' },
+  { path: '/packages', label: '生态包' },
   { path: '/settings', label: '设置' },
+  { path: '/cli', label: '命令行' },
+  { path: '/slash-commands', label: '斜杠命令' },
   { path: '/sdk', label: 'SDK' },
 ]
 

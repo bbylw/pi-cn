@@ -44,9 +44,11 @@ export default function (pi: ExtensionAPI) {
 }`
 
 const extensionLocations = [
-  { path: '~/.pi/agent/extensions/', desc: '全局扩展（所有项目）' },
-  { path: '.pi/extensions/', desc: '项目级扩展' },
-  { path: 'pi -e ./path.ts', desc: '临时加载（仅测试）' },
+  { path: '~/.pi/agent/extensions/', desc: '用户级扩展（所有项目）' },
+  { path: '.pi/extensions/', desc: '项目级扩展（需项目信任）' },
+  { path: 'pi-package 的 extensions/', desc: '随 Pi 包分发' },
+  { path: 'pi -e ./path.ts', desc: '临时加载（仅当前进程）' },
+  { path: 'builtin:mcp、builtin:codemode 等', desc: 'Pi 内置扩展，默认加载' },
 ]
 
 const capabilities = [
@@ -57,6 +59,8 @@ const capabilities = [
   { title: '自定义命令', desc: '通过 pi.registerCommand() 注册 /mycommand 命令' },
   { title: '会话持久化', desc: '通过 pi.appendEntry() 存储跨重启的状态' },
   { title: '自定义渲染', desc: '控制工具调用/结果和消息在 TUI 中的显示方式' },
+  { title: 'MCP 服务器', desc: '通过 pi.registerMcpServer() 为当前会话添加服务器' },
+  { title: '替换内置工具', desc: '注册 codemode、tool_search 或 /mcp 即可替换对应的内置实现' },
 ]
 
 const events = [
@@ -80,9 +84,9 @@ const useCases = [
 ]
 
 const skills = [
-  { title: '什么是技能', desc: '技能是带有指令和工具的能力包，按需加载。渐进式披露，不会破坏提示缓存。' },
-  { title: '技能位置', desc: '~/.pi/agent/skills/ 或 .pi/skills/' },
-  { title: '技能格式', desc: 'Markdown 文件，包含 frontmatter 元数据和指令' },
+  { title: '什么是技能', desc: '包含 SKILL.md 的目录，可携带脚本、参考资料和资源文件。' },
+  { title: '技能位置', desc: '~/.pi/agent/skills/、.pi/skills/、~/.agents/skills/ 与 .agents/skills/' },
+  { title: '技能调用', desc: '模型按描述自动发现，或用 /skill:name 强制加载并附加参数' },
 ]
 </script>
 
@@ -117,6 +121,13 @@ const skills = [
         </div>
         <p class="text-surface-400 text-sm mt-3">
           放置在自动发现位置的扩展可以通过 <code class="text-brand-400">/reload</code> 热重载。
+          项目级的 <code class="text-brand-400">.pi/extensions</code> 属于受
+          <router-link to="/security" class="text-brand-400 hover:text-brand-300">项目信任</router-link> 保护的资源，
+          只有授予信任后才会加载；项目包中的扩展同样如此。内置扩展名为
+          <code class="text-brand-400">builtin:mcp</code>、<code class="text-brand-400">builtin:llama.cpp</code>、
+          <code class="text-brand-400">builtin:codemode</code> 和 <code class="text-brand-400">builtin:tool-search</code>，
+          可用 <code class="text-brand-400">"extensions": ["-builtin:mcp"]</code> 或 <code class="text-brand-400">--no-extensions</code> 禁用。
+          扩展在 Pi 进程内以你的权限执行，加载前请检查源码。
         </p>
       </section>
 
@@ -167,7 +178,8 @@ const skills = [
       <section class="mb-12">
         <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">技能</h2>
         <p class="text-surface-300 mb-4">
-          技能是 Agent Skills，用于可复用的按需能力。它们提供渐进式披露，不会破坏提示缓存。
+          技能用指令和配套文件处理某一类工作，Pi 只向模型公开名称和描述，完整指令按需加载。
+          当工作流需要的上下文比提示模板多、但不需要新的可执行集成点时，优先使用技能而不是扩展。
         </p>
         <div class="space-y-4">
           <div v-for="skill in skills" :key="skill.title" class="glass-card p-4">
@@ -175,6 +187,10 @@ const skills = [
             <p class="text-surface-400 text-sm">{{ skill.desc }}</p>
           </div>
         </div>
+        <p class="text-surface-400 text-sm mt-3">
+          完整的技能格式、位置和 frontmatter 字段见
+          <router-link to="/skills" class="text-brand-400 hover:text-brand-300">技能</router-link>。
+        </p>
       </section>
 
       <!-- ExtensionContext -->

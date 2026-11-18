@@ -1,49 +1,45 @@
 <script setup lang="ts">
 import CodeBlock from '../components/CodeBlock.vue'
 
-const installCode = `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
+const installUnixCode = `curl -fsSL https://pi.dev/install.sh | sh`
 
-const curlCode = `curl -fsSL https://pi.dev/install.sh | sh`
+const installWindowsCode = `powershell -c "irm https://pi.dev/install.ps1 | iex"`
 
-const uninstallCode = `# npm 或 curl 安装
-npm uninstall -g @earendil-works/pi-coding-agent
+const installNpmCode = `npm install -g --ignore-scripts @earendil-works/pi-coding-agent`
 
-# pnpm
-pnpm remove -g @earendil-works/pi-coding-agent
+const installNixCode = `nix profile add github:earendil-works/pi/stable`
 
-# Yarn
-yarn global remove @earendil-works/pi-coding-agent
+const verifyCode = `pi --version`
 
-# Bun
-bun uninstall -g @earendil-works/pi-coding-agent`
-
-const apiKeyCode = `export ANTHROPIC_API_KEY=sk-ant-...
+const startCode = `cd /path/to/folder
 pi`
 
-const firstSessionCode = `cd /path/to/project
-pi
+const firstTaskCode = `> Summarize @meeting-notes.md and save the action items to action-items.md.
 
-# 然后输入你的请求：
-# > Summarize this repository and tell me how to run its checks.`
+> Explain how this repository is structured and how to run its checks.
 
-const agentsMdCode = `# Project Instructions
+> Compare @previous.csv with @current.csv and summarize the important changes.`
 
-- Run \`npm run check\` after code changes.
-- Do not run production migrations locally.
-- Keep responses concise.`
+const continueCode = `pi --continue`
 
-const referenceFilesCode = `pi @README.md "Summarize this"
-pi @src/app.ts @src/app.test.ts "Review these together"`
+const uninstallCode = `# npm 安装
+npm uninstall -g @earendil-works/pi-coding-agent
 
-const shellCommandCode = `# 在交互模式中：
-!npm run lint
+# 安装脚本安装：再次运行并选择 "Uninstall Pi"
+curl -fsSL https://pi.dev/install.sh | sh
 
-# 运行命令但不将输出添加到模型上下文中：
-!!npm run lint`
+# Nix 安装
+nix profile remove pi`
 
-const nonInteractiveCode = `pi -p "Summarize this codebase"
-cat README.md | pi -p "Summarize this text"
-pi -p @screenshot.png "What's in this image?"`
+const customize = [
+  { need: '给某个目录的 Pi 持久指令', start: 'AGENTS.md', path: '/configuration' },
+  { need: '从 / 菜单复用一段提示', start: '提示模板', path: '/extensions' },
+  { need: '添加特定任务的指令和配套文件', start: '技能', path: '/skills' },
+  { need: '添加可执行工具、命令或事件处理器', start: '扩展', path: '/extensions' },
+  { need: '构建自定义终端组件', start: '终端 UI', path: '/extensions' },
+  { need: '连接不受支持的模型服务', start: '自定义提供商', path: '/models' },
+  { need: '安装或分发多个资源', start: 'Pi 包', path: '/packages' },
+]
 </script>
 
 <template>
@@ -53,156 +49,134 @@ pi -p @screenshot.png "What's in this image?"`
       <div class="mb-12">
         <h1 class="text-4xl font-display font-bold text-surface-50 mb-4">快速开始</h1>
         <p class="text-lg text-surface-400 leading-relaxed">
-          本页面将带你从安装到第一次 Pi 会话。
+          Pi 运行在你的终端里，处理你机器上的文件。使用它需要一个受支持提供商提供的模型访问权限：
+          订阅、API Key 或本地模型都可以。
+        </p>
+        <p class="text-surface-400 text-sm mt-3">
+          原生 Windows 的配置见上游 Windows Setup 文档，Android 见 Termux Setup 文档。
         </p>
       </div>
 
-      <!-- Install Section -->
+      <!-- 1. Install -->
       <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">安装</h2>
-        <p class="text-surface-300 mb-4">
-          Pi 以 npm 包形式分发：
-        </p>
-        <CodeBlock :code="installCode" language="bash" />
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">1. 安装 Pi</h2>
+        <p class="text-surface-300 mb-3">在 macOS、Linux 或 Windows 上使用安装脚本：</p>
+        <CodeBlock :code="installUnixCode" language="bash" filename="macOS / Linux" />
+        <div class="mt-3">
+          <CodeBlock :code="installWindowsCode" language="powershell" filename="Windows" />
+        </div>
         <p class="text-surface-400 text-sm mt-3">
-          <code class="text-brand-400">--ignore-scripts</code> 在安装期间禁用依赖生命周期脚本。Pi 的正常 npm 安装不需要安装脚本。
+          两个安装脚本都会锁定所有依赖，并用 <code class="text-brand-400">pi update</code> 更新 Pi。
+          也可以从 npm 安装（不锁定传递依赖），需要 Node.js 22.19 或更新版本：
         </p>
+        <CodeBlock :code="installNpmCode" language="bash" />
+        <p class="text-surface-400 text-sm mt-3">
+          正常的 npm 安装不需要依赖生命周期脚本。
+        </p>
+        <p class="text-surface-300 text-sm mt-4 mb-2">
+          使用 Nix（macOS 或 Linux）时，可从 Pi 的 flake 安装最新版本，Nix 会从源码构建：
+        </p>
+        <CodeBlock :code="installNixCode" language="bash" />
+        <p class="text-surface-400 text-sm mt-3">
+          较旧的 Nix 使用 <code class="text-brand-400">nix profile install</code>。更新用
+          <code class="text-brand-400">nix profile upgrade pi</code>；<code class="text-brand-400">pi update</code> 无法更新 Nix 安装。
+          要固定版本，可使用 <code class="text-brand-400">github:earendil-works/pi/v1.0.0</code> 这样的标签。
+        </p>
+        <p class="text-surface-300 text-sm mt-4 mb-2">验证安装：</p>
+        <CodeBlock :code="verifyCode" language="bash" />
+      </section>
 
-        <div class="mt-6">
-          <p class="text-surface-300 mb-3">在 Linux 或 macOS 上，你也可以使用安装脚本：</p>
-          <CodeBlock :code="curlCode" language="bash" />
+      <!-- 2. Start -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">2. 启动 Pi</h2>
+        <p class="text-surface-300 mb-3">切换到想让 Pi 工作的文件夹，然后启动：</p>
+        <CodeBlock :code="startCode" language="bash" />
+        <p class="text-surface-400 text-sm mt-3">
+          工作文件夹帮助 Pi 发现相关文件、指令和配置，也用于归组保存的会话。界面显示对话、用于输入提示和命令的编辑器，
+          以及包含当前文件夹、模型和会话状态的页脚。
+        </p>
+      </section>
+
+      <!-- 3. Choose a model -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">3. 选择模型</h2>
+        <p class="text-surface-300 mb-3">
+          <strong class="text-surface-100">模型</strong>生成 Pi 的响应，<strong class="text-surface-100">提供商</strong>
+          是 Pi 访问该模型所使用的服务或账号。在 Pi 中运行：
+        </p>
+        <code class="block code-block text-brand-300">/login</code>
+        <p class="text-surface-400 text-sm mt-3">
+          选择提供商，然后按提示使用订阅或保存 API Key。之后用 <code class="text-brand-400">/model</code> 选择其他可用模型。
+          支持的提供商、环境变量认证、本地模型和自定义端点见
+          <router-link to="/models" class="text-brand-400 hover:text-brand-300">选择模型</router-link>。
+        </p>
+      </section>
+
+      <!-- 4. Give Pi a task -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">4. 给 Pi 一个任务</h2>
+        <p class="text-surface-300 mb-3">
+          Pi 会显示它执行的每次文件读取、搜索、命令和编辑，不会在每次工具调用前询问。输入与你的工作匹配的任务，例如：
+        </p>
+        <CodeBlock :code="firstTaskCode" language="text" />
+        <p class="text-surface-400 text-sm mt-3">
+          在编辑器中输入 <code class="text-brand-400">@</code> 可以搜索文件，而不必输入完整路径。
+          Pi 完成后，检查它的响应和被修改的文件。重要工作请使用版本控制或备份；对不可信或无人值守的工作，使用容器或其他沙箱，
+          参见 <router-link to="/security" class="text-brand-400 hover:text-brand-300">安全</router-link>。
+        </p>
+      </section>
+
+      <!-- Continue later -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">稍后继续</h2>
+        <p class="text-surface-300 mb-3">Pi 会自动保存会话。退出后，在同一工作文件夹中恢复最近的会话：</p>
+        <CodeBlock :code="continueCode" language="bash" />
+        <p class="text-surface-400 text-sm mt-3">
+          使用 <code class="text-brand-400">/resume</code> 选择其他已保存的会话。会话命名、分支、压缩、导出和分享见
+          <router-link to="/sessions" class="text-brand-400 hover:text-brand-300">会话管理</router-link>。
+        </p>
+      </section>
+
+      <!-- Next steps -->
+      <section class="mb-12">
+        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">下一步</h2>
+        <ul class="space-y-2 mb-6">
+          <li><router-link to="/usage" class="text-brand-400 hover:text-brand-300 text-sm">使用指南 → 输入、命令、快捷键和排队消息</router-link></li>
+          <li><router-link to="/configuration" class="text-brand-400 hover:text-brand-300 text-sm">配置 → 让 Pi 在某个文件夹中始终遵循的指令</router-link></li>
+          <li><router-link to="/models" class="text-brand-400 hover:text-brand-300 text-sm">选择模型与提供商</router-link></li>
+          <li><router-link to="/how-pi-works" class="text-brand-400 hover:text-brand-300 text-sm">Pi 如何工作 → 工具、上下文、会话与 agent 循环</router-link></li>
+        </ul>
+
+        <h3 class="text-lg font-display font-semibold text-surface-50 mb-3">选择自定义 Pi 的方式</h3>
+        <p class="text-surface-400 text-sm mb-3">从能满足需求的最小机制开始：</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-surface-700">
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">需求</th>
+                <th class="text-left py-3 px-4 text-surface-300 font-medium">从这里开始</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="c in customize" :key="c.need" class="border-b border-surface-800/50">
+                <td class="py-3 px-4 text-surface-300">{{ c.need }}</td>
+                <td class="py-3 px-4">
+                  <router-link :to="c.path" class="text-brand-400 hover:text-brand-300">{{ c.start }}</router-link>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <!-- Uninstall Section -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">卸载</h2>
-        <p class="text-surface-300 mb-4">
-          使用安装 Pi 时使用的包管理器。curl 安装器全局使用 npm，因此 curl 和 npm 安装都通过 npm 卸载：
-        </p>
+      <!-- Uninstall -->
+      <section class="glass-card p-8">
+        <h2 class="text-xl font-display font-semibold text-surface-50 mb-4">卸载 Pi</h2>
+        <p class="text-surface-300 text-sm mb-3">使用安装 Pi 时所用的方式卸载：</p>
         <CodeBlock :code="uninstallCode" language="bash" />
         <p class="text-surface-400 text-sm mt-3">
-          卸载 Pi 后，设置、凭证、会话和已安装的 Pi 包仍保留在 <code class="text-brand-400">~/.pi/agent/</code> 中。
+          以上方式都不会删除 <code class="text-brand-400">~/.pi/agent/</code> 中的配置、凭证、会话或已安装的 Pi 包。
         </p>
-      </section>
-
-      <!-- Authenticate Section -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">认证</h2>
-        <p class="text-surface-300 mb-4">
-          Pi 可以通过 <code class="text-brand-400">/login</code> 使用订阅提供商，或通过环境变量/认证文件使用 API Key 提供商。
-        </p>
-
-        <div class="space-y-6">
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">选项 1：订阅登录</h3>
-            <p class="text-surface-300 mb-3">启动 Pi 并运行：</p>
-            <code class="block code-block text-brand-300">/login</code>
-            <p class="text-surface-400 text-sm mt-2">
-              然后选择一个提供商。内置订阅登录包括 Claude Pro/Max、ChatGPT Plus/Pro (Codex) 和 GitHub Copilot。
-            </p>
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">选项 2：API Key</h3>
-            <p class="text-surface-300 mb-3">在启动 Pi 之前设置 API Key：</p>
-            <CodeBlock :code="apiKeyCode" language="bash" />
-            <p class="text-surface-400 text-sm mt-2">
-              你也可以运行 <code class="text-brand-400">/login</code> 并选择 API Key 提供商，将密钥存储在 <code class="text-brand-400">~/.pi/agent/auth.json</code> 中。
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <!-- First Session Section -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">第一次会话</h2>
-        <p class="text-surface-300 mb-4">
-          启动 Pi 后，输入请求并按 Enter：
-        </p>
-        <CodeBlock :code="firstSessionCode" language="bash" />
-        <p class="text-surface-400 text-sm mt-3">
-          默认情况下，Pi 给模型四个工具：<code class="text-brand-400">read</code>（读取文件）、<code class="text-brand-400">write</code>（创建或覆盖文件）、<code class="text-brand-400">edit</code>（修补文件）、<code class="text-brand-400">bash</code>（运行 shell 命令）。
-        </p>
-      </section>
-
-      <!-- Project Instructions Section -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">给 Pi 项目指令</h2>
-        <p class="text-surface-300 mb-4">
-          Pi 在启动时加载上下文文件。添加 <code class="text-brand-400">AGENTS.md</code> 文件来告诉它如何在项目中工作：
-        </p>
-        <CodeBlock :code="agentsMdCode" language="markdown" filename="AGENTS.md" />
-        <p class="text-surface-400 text-sm mt-3">
-          Pi 加载：
-        </p>
-        <ul class="list-disc list-inside text-surface-400 text-sm mt-2 space-y-1">
-          <li><code class="text-brand-400">~/.pi/agent/AGENTS.md</code> — 全局指令</li>
-          <li>父目录和当前目录中的 <code class="text-brand-400">AGENTS.md</code> 或 <code class="text-brand-400">CLAUDE.md</code></li>
-        </ul>
-      </section>
-
-      <!-- Common Things Section -->
-      <section class="mb-12">
-        <h2 class="text-2xl font-display font-semibold text-surface-50 mb-4">常用操作</h2>
-
-        <div class="space-y-8">
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">引用文件</h3>
-            <p class="text-surface-300 mb-3">在编辑器中输入 <code class="text-brand-400">@</code> 进行模糊搜索文件，或在命令行传递文件：</p>
-            <CodeBlock :code="referenceFilesCode" language="bash" />
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">运行 Shell 命令</h3>
-            <p class="text-surface-300 mb-3">在交互模式中：</p>
-            <CodeBlock :code="shellCommandCode" language="bash" />
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">切换模型</h3>
-            <p class="text-surface-300">
-              使用 <code class="text-brand-400">/model</code> 或 <code class="text-brand-400">Ctrl+L</code> 选择模型。使用 <code class="text-brand-400">Shift+Tab</code> 循环思考级别。使用 <code class="text-brand-400">Ctrl+P</code> / <code class="text-brand-400">Shift+Ctrl+P</code> 循环切换范围内的模型。
-            </p>
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">稍后继续</h3>
-            <p class="text-surface-300 mb-3">会话自动保存：</p>
-            <CodeBlock code="pi -c                  # 继续最近的会话
-pi -r                  # 浏览之前的会话
-pi --name 'my task'    # 在启动时设置会话显示名称
-pi --session <path|id> # 打开特定会话" language="bash" />
-          </div>
-
-          <div>
-            <h3 class="text-lg font-semibold text-surface-100 mb-2">非交互模式</h3>
-            <p class="text-surface-300 mb-3">用于一次性提示：</p>
-            <CodeBlock :code="nonInteractiveCode" language="bash" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Next Steps -->
-      <section class="glass-card p-8 glow-border">
-        <h2 class="text-xl font-display font-semibold text-surface-50 mb-4">下一步</h2>
-        <ul class="space-y-3">
-          <li>
-            <router-link to="/usage" class="text-brand-400 hover:text-brand-300">
-              使用指南 → 交互模式、斜杠命令、会话、上下文文件和 CLI 参考
-            </router-link>
-          </li>
-          <li>
-            <router-link to="/providers" class="text-brand-400 hover:text-brand-300">
-              模型提供商 → 认证和模型设置
-            </router-link>
-          </li>
-          <li>
-            <router-link to="/extensions" class="text-brand-400 hover:text-brand-300">
-              扩展与技能 → 自定义 Pi 的行为
-            </router-link>
-          </li>
-        </ul>
       </section>
     </div>
   </div>
